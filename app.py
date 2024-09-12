@@ -17,9 +17,9 @@ oauth = OAuth(app)
 
 google = oauth.register(
     name='google',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_id=config.get('CLIENT_ID'),
-    client_secret=config.get('CLIENT_SECRET'),
+    server_metadata_url=config.get('CONF_URL'),
+    client_id=config.get("CLIENT_ID"),
+    client_secret=config.get("CLIENT_SECRET"),
     client_kwargs={
         'scope': 'openid email'
     }
@@ -56,19 +56,15 @@ def process_form_data(request_form):
         session['update result'] = f'"update from" field must be earlier than "update to"'
     else:
         session['update result'] = f'Updated for {update_from} to {update_to}'
-        return update_from, update_to
+        output_format = '%Y%m%d'
+        return str(update_from.strftime(output_format)), str(update_to.strftime(output_format))
 
     return None
 
 
 def update_google_sheets(update_from, update_to):
-    update_from = update_from.strftime('%Y%m%d')
-    update_to = update_to.strftime('%Y%m%d')
-    url = f'https://bank.gov.ua/NBU_Exchange/exchange_site?start={update_from}&end={update_to}&valcode=usd&sort=exchangedate&order=desc&json'
-    response = requests.get(url).text
-
     try:
-        subprocess.check_call(['python', 'updater.py', response])
+        subprocess.check_call(['python', 'updater.py', update_from, update_to])
     except subprocess.CalledProcessError:
         session['update result'] = 'Something went wrong while updating spreadsheet information'
 

@@ -4,7 +4,15 @@ import gspread
 import pandas as pd
 import sys
 
-data = pd.read_json(StringIO(sys.argv[1]))
+import requests
+
+update_from = sys.argv[1]
+update_to = sys.argv[2]
+
+url = f'https://bank.gov.ua/NBU_Exchange/exchange_site?start={update_from}&end={update_to}&valcode=usd&sort=exchangedate&order=desc&json'
+response = requests.get(url)
+
+data = pd.read_json(StringIO(response.text))
 data = data[['exchangedate', 'rate_per_unit']].iloc[::-1]
 
 gc = gspread.service_account(filename='service-account.json')
